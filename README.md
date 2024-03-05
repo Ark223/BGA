@@ -6,7 +6,7 @@ Subject: Desktop application for the analysis of gameplay in card game of Bridge
 
 University: Politechnika Bydgoska im. Jana i Jędrzeja Śniadeckich
 
-![alt text](https://raw.githubusercontent.com/Ark223/BGA/main/App.png)
+![alt text](https://raw.githubusercontent.com/Ark223/BGA/a85a5b55b5d19ed9d2e093355e0886428c739f07/App.png)
 
 ## Introduction
 
