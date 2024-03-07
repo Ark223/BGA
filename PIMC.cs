@@ -30,8 +30,8 @@ namespace BGA
 
         // player hands
         private Hand played = null;
-        private Details eastDetails = null;
-        private Details westDetails = null;
+        private Constraints eastConsts = null;
+        private Constraints westConsts = null;
         private readonly Hand northHand = new Hand();
         private readonly Hand southHand = new Hand();
         private readonly Hand eastPlayed = new Hand();
@@ -89,14 +89,14 @@ namespace BGA
         }
 
         internal void SetupEvaluation(Hand[] our, Hand oppos, Hand played,
-            IEnumerable<string> legal, Details[] details, Player leader)
+            IEnumerable<string> legal, Constraints[] consts, Player leader)
         {
             this.legalMoves = legal;
             this.played = played;
             this.commands = string.Join(" ",
                 played.Select(c => c.ToString()));
-            this.eastDetails = details[0];
-            this.westDetails = details[1];
+            this.eastConsts = consts[0];
+            this.westConsts = consts[1];
             this.northHand.AddRange(our[0]);
             this.southHand.AddRange(our[1]);
             this.opposCards.AddRange(oppos);
@@ -161,8 +161,8 @@ namespace BGA
                             this.comparer).Concat(this.eastPlayed);
 
                         // exclude impossible hands
-                        if (this.Ignore(eastHand, this.eastDetails) ||
-                            this.Ignore(westHand, this.westDetails)) continue;
+                        if (this.Ignore(eastHand, this.eastConsts) ||
+                            this.Ignore(westHand, this.westConsts)) continue;
 
                         // DDS analysis
                         string E = eastHand.Parse(), W = westHand.Parse();
@@ -205,16 +205,16 @@ namespace BGA
             this.evaluate = false;
         }
 
-        private bool Ignore(IEnumerable<Card> hand, Details details)
+        private bool Ignore(IEnumerable<Card> hand, Constraints consts)
         {
-            int minHcp = details.MinHCP;
-            int maxHcp = details.MaxHCP;
+            int minHcp = consts.MinHCP;
+            int maxHcp = consts.MaxHCP;
             int hcp = hand.Sum(c => c.HCP());
             if (hcp < minHcp || hcp > maxHcp) return true;
             for (int index = 0; index <= 3; index++)
             {
-                int min = details[(Suit)index, 0];
-                int max = details[(Suit)index, 1];
+                int min = consts[(Suit)index, 0];
+                int max = consts[(Suit)index, 1];
                 int count = hand.Count(c => c.Suit == (Suit)index);
                 if (count < min || count > max) return true;
             }

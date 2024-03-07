@@ -56,7 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Details.cs" />
+    <Compile Include="Constraints.cs" />
     <Compile Include="PIMC.cs" />
     <Compile Include="Card.cs" />
     <Compile Include="Extensions.cs" />

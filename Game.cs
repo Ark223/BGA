@@ -46,10 +46,10 @@ namespace BGA
             8.5F, FontStyle.Regular, GraphicsUnit.Point);
         private readonly Hand played = new Hand();
         private readonly Timer timer = new Timer();
-        private Details oldEastDetails;
-        private Details oldWestDetails;
-        private Details eastDetails;
-        private Details westDetails;
+        private Constraints prevEastConsts;
+        private Constraints prevWestConsts;
+        private Constraints eastConsts;
+        private Constraints westConsts;
         private Hand northHand = new Hand();
         private Hand southHand = new Hand();
         private Hand opposCards = new Hand();
@@ -146,10 +146,10 @@ namespace BGA
 
             this.Clear();
             this.GenerateCards();
-            this.ResetDetails(0, ref this.eastDetails);
-            this.ResetDetails(1, ref this.westDetails);
-            this.oldEastDetails = this.eastDetails.Copy();
-            this.oldWestDetails = this.westDetails.Copy();
+            this.ResetConstraints(0, ref this.eastConsts);
+            this.ResetConstraints(1, ref this.westConsts);
+            this.prevEastConsts = this.eastConsts.Copy();
+            this.prevWestConsts = this.westConsts.Copy();
             this.leader = this.CLeader.SelectedIndex
                 == 0 ? Player.West : Player.East;
             this.takenByNS = this.takenByEW = 0;
@@ -302,22 +302,22 @@ namespace BGA
             else if (this.leader == Player.West || this.leader == Player.East)
             {
                 int hcp = card.HCP();
-                Details newDetails = this.leader == Player.East
-                    ? this.eastDetails : this.westDetails;
-                int prevMin = newDetails[card.Suit, 0];
-                int prevMax = newDetails[card.Suit, 1];
-                newDetails[card.Suit, 0] = Math.Max(0, prevMin - 1);
-                newDetails[card.Suit, 1] = Math.Max(0, prevMax - 1);
-                newDetails.MinHCP = Math.Max(0, newDetails.MinHCP - hcp);
-                newDetails.MaxHCP = Math.Max(0, newDetails.MaxHCP - hcp);
+                Constraints nextConsts = this.leader == Player.East
+                    ? this.eastConsts : this.westConsts;
+                int prevMin = nextConsts[card.Suit, 0];
+                int prevMax = nextConsts[card.Suit, 1];
+                nextConsts[card.Suit, 0] = Math.Max(0, prevMin - 1);
+                nextConsts[card.Suit, 1] = Math.Max(0, prevMax - 1);
+                nextConsts.MinHCP = Math.Max(0, nextConsts.MinHCP - hcp);
+                nextConsts.MaxHCP = Math.Max(0, nextConsts.MaxHCP - hcp);
                 if (this.played.Count > 0 && card.Suit != this.played[0].Suit)
                 {
-                    Details oldDetails = this.leader == Player.East
-                        ? this.oldEastDetails : this.oldWestDetails;
-                    newDetails[this.played[0].Suit, 0] = 0;
-                    newDetails[this.played[0].Suit, 1] = 0;
-                    oldDetails[this.played[0].Suit, 0] = 0;
-                    oldDetails[this.played[0].Suit, 1] = 0;
+                    Constraints prevConsts = this.leader == Player.East
+                        ? this.prevEastConsts : this.prevWestConsts;
+                    nextConsts[this.played[0].Suit, 0] = 0;
+                    nextConsts[this.played[0].Suit, 1] = 0;
+                    prevConsts[this.played[0].Suit, 0] = 0;
+                    prevConsts[this.played[0].Suit, 1] = 0;
                 }
             }
 
@@ -339,10 +339,8 @@ namespace BGA
             }
             if (this.played.Count >= 4)
             {
-                this.oldEastDetails = this.eastDetails.Copy();
-                this.oldWestDetails = this.westDetails.Copy();
-                // MessageBox.Show(this.oldWestDetails.ToString());
-                // MessageBox.Show(this.oldEastDetails.ToString());
+                this.prevEastConsts = this.eastConsts.Copy();
+                this.prevWestConsts = this.westConsts.Copy();
                 this.leader = this.winningPlayer;
                 bool ns = (int)this.leader % 2 == 0;
                 if (ns) this.takenByNS++;
@@ -398,8 +396,8 @@ namespace BGA
             this.PIMC.SetupEvaluation(new Hand[2] {
                 this.northHand, this.southHand },
                 this.opposCards, this.played, legal,
-                new Details[2] { this.oldEastDetails,
-                this.oldWestDetails }, this.leader);
+                new Constraints[2] { this.prevEastConsts,
+                this.prevWestConsts }, this.leader);
             int trump = this.CTrump.SelectedIndex;
             this.PIMC.BeginEvaluate((Trump)trump);
             this.elapsed = 0f;
@@ -422,7 +420,7 @@ namespace BGA
             foreach (Card card in hand) this.CreateButton(panel, card);
         }
 
-        private void ResetDetails(int side, ref Details details)
+        private void ResetConstraints(int side, ref Constraints consts)
         {
             Regex rgx = new Regex(@"\d+");
             int minClubs = int.Parse(side == 1 ?
@@ -455,7 +453,7 @@ namespace BGA
             int maxHcp = int.Parse(side == 1 ?
                 rgx.Match(this.TLeftHCPMax.Text).Value :
                 rgx.Match(this.TRightHCPMax.Text).Value);
-            details = new Details(minClubs, maxClubs,
+            consts = new Constraints(minClubs, maxClubs,
                 minDiamonds, maxDiamonds, minHearts, maxHearts,
                 minSpades, maxSpades, minHcp, maxHcp);
         }
